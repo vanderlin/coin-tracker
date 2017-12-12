@@ -1,0 +1,11 @@
+$fa-font-path: "../node_modules/font-awesome/fonts";
+@import '~font-awesome/scss/font-awesome.scss';    
+@import "./fonts";
+@import "./variables";
+@import "~bulma";
+
+html, body {
+    margin:0;
+    height:100%;
+    min-height:100%;
+}
