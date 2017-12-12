@@ -57,7 +57,7 @@
             </div>
         </div>
     
-        <table class="table">
+        <table class="table is-striped">
             <thead>
                 <tr>
                     <!-- <th v-for="(item, key) in transactions.header">{{item}}</th> -->
@@ -86,7 +86,7 @@
                     <td><b>{{getCurrentMarketPrice(transaction) | currency}} <small class="is-size-7 has-text-grey-light">{{transaction.coin}}</small></b></td>
                     <td :class="{'is-gain': isMarketUp(transaction), 'is-loss': !isMarketUp(transaction)}">{{getPercentChange(transaction)}}%</td>
                     <td :class="{'is-gain': isGain(transaction), 'is-loss': !isGain(transaction)}">{{getProfits(transaction) | currency}}</td>
-                    <td>
+                    <td class="edit-item is-aligned-middle">
                         <a class="button is-small" @click.prevent="editTransaction(transaction)">
                             <span class="icon is-small">
                                 <i class="fa fa-pencil"></i>
@@ -275,9 +275,12 @@ export default {
 </script>
 
 <style lang="scss">
-@import '~bulma';
 @import '../styles/variables';
-
+.table {
+    .button {
+        border-radius: 50%;
+    }
+}
 .is-gain {
     color: green;
     font-weight: bold;
@@ -301,6 +304,9 @@ export default {
     infinite
     none
     running;
+}
+.is-aligned-middle {
+    vertical-align: middle !important;
 }
 
 @keyframes warningPulse {
