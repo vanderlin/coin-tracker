@@ -41,21 +41,23 @@ var isLoadingCoinData = false;
 var coinURLs = {
 	BTC: 'https://api.coinbase.com/v2/prices/BTC-USD/buy',
 	LTC: 'https://api.coinbase.com/v2/prices/LTC-USD/buy',
+	ETH: 'https://api.coinbase.com/v2/prices/ETH-USD/buy',
 }
 
 function loadCoinPriceData() {
 	return new Promise((resolve, reject) => {
 		if(!isLoadingCoinData) {
 			console.log('laoding latest data');
-			const reqs = ['BTC', 'LTC'].map(key => {
+			const reqs = ['BTC', 'LTC', 'ETH'].map(key => {
 	            return axios.get(coinURLs[key])
 	        })
 	        var btc, ltc
 	        axios.all(reqs).then(
-	            axios.spread((btcRes, ltcRes) => {
+	            axios.spread((btcRes, ltcRes, ethRes) => {
 	            	var prices = {
 	            		BTC: btcRes.data.data,
 	            		LTC: ltcRes.data.data,
+	            		ETH: ethRes.data.data,
 	            	}
 					store.commit('prices', prices)
 	            	console.log(prices);

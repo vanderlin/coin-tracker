@@ -3,11 +3,11 @@
     <div class="column is-10 is-offset-1">
 
         <div v-if="selectedTransaction" class="modal" :class="{'is-active': showModal}">
-            <div class="modal-background transaction-modal"></div>
+            <div class="modal-background transaction-modal" @click.prevent="closeModal"></div>
                 <div class="modal-card">
                 <header class="modal-card-head">
                     <p class="modal-card-title">Add Transaction</p>
-                    <button class="delete" aria-label="close" @click.prevent="cancelTransationAddEdit"></button>
+                    <button class="delete" aria-label="close" @click.prevent="closeModal"></button>
                 </header>
                 <section class="modal-card-body">
                         <div class="field is-grouped">
@@ -21,7 +21,7 @@
                             </div>
                             <div class="control">
                                 <label class="label">Transaction Date</label>
-                                <datepicker placeholder="Transaction date" v-model="selectedTransaction.date" :config="{  }"></datepicker>
+                                <datepicker class="input" placeholder="Transaction date" v-model="selectedTransaction.date" :config="{ dateFormat: 'M j Y' }"></datepicker>
                                 <!-- <input class="input" type="date" v-model="selectedTransaction.date"> -->
                             </div>
                         </div>
@@ -42,7 +42,17 @@
                 </section>
                 <footer class="modal-card-foot">
                     <button class="button is-success" @click.prevent="updateTransaction(selectedTransaction)">Save</button>
-                    <button class="button" @click.prevent="cancelTransationAddEdit">Cancel</button>
+                    <button class="button" @click.prevent="closeModal">Cancel</button>
+                    <button class="button is-danger" :class="{'is-warning-pulse': confirmDeleteTransaction}" @click.prevent="removeTransaction(selectedTransaction)" v-if="selectedTransaction['.key']">
+                        <template v-if="!confirmDeleteTransaction">
+                            <span class="icon">
+                                <i class="fa fa-trash"></i>
+                            </span>
+                        </template>
+                        <template v-if="confirmDeleteTransaction">
+                            Are you sure?
+                        </template>
+                    </button>
                 </footer>
             </div>
         </div>
@@ -114,9 +124,10 @@ export default {
     props: {},
     data() {
         return {
+            confirmDeleteTransaction: false,
             showModal: false,
             transactions: null,
-            coins: ['BTC', 'LTC'],
+            coins: ['BTC', 'LTC', 'ETH'],
             selectedTransaction: null
             /*transactions: {
                 data: [
@@ -171,6 +182,9 @@ export default {
             var diff = currentPrice - originalPrice;
             return diff
         },
+        transactionDate(transaction) {
+            return this.$moment(transaction.date)
+        },
         editTransaction(transaction) {
             this.showModal = true
             this.selectedTransaction = transaction
@@ -195,22 +209,33 @@ export default {
             this.showModal = false
             this.selectedTransaction = null
         },
-        cancelTransationAddEdit() {
+        closeModal() {
             this.showModal = false
             this.selectedTransaction = null
+            this.confirmDeleteTransaction = false;
         },
         addTransation() {
             this.showModal = true
 
             var transaction = {
                 coin: 'BTC',
-                date: new Date(),
+                date: (new Date()).getTime(),
                 cost_basis: 0,
                 purchase_amount: 0,
             }
 
             this.selectedTransaction = transaction
         },
+        removeTransaction(transaction) {
+            if(!this.confirmDeleteTransaction) {
+                this.confirmDeleteTransaction = true;
+            }
+            else if(this.confirmDeleteTransaction) {
+                this.$db.ref(`transactions/${this.authID}/${transaction['.key']}`).remove()
+                console.log('remove transaction', transaction['.key']);
+                this.closeModal();
+            }
+        }
 
     },
     computed: {
@@ -251,6 +276,8 @@ export default {
 
 <style lang="scss">
 @import '~bulma';
+@import '../styles/variables';
+
 .is-gain {
     color: green;
     font-weight: bold;
@@ -264,5 +291,27 @@ export default {
 }
 .main-page {
     margin-top: 50px;
+}
+.is-warning-pulse {
+    background-color: $red-color;
+    animation: warningPulse 1.5s
+    ease-in-out
+    0s
+    alternate
+    infinite
+    none
+    running;
+}
+
+@keyframes warningPulse {
+  0% {
+    background-color: $red-color;
+  }
+  50% {
+    background-color: $red-dark-color;
+  }
+  100 {
+    background-color: $red-color;
+  }
 }
 </style>
