@@ -132,7 +132,13 @@
             <div class="total-breakdown-columns">
                 <div class="total-breakdown-col breakdown-title">
                     <div class="total-breakdown-item">
+                        Total Investment
+                    </div>
+                    <div class="total-breakdown-item">
                         Gains &amp; Losses
+                    </div>
+                    <div class="total-breakdown-item">
+                        Total Cash Out
                     </div>
                 </div>
                 <div class="total-breakdown-col breakdown-cost">
@@ -140,7 +146,10 @@
                         <span>{{totalInvestment | currency}}</span>
                     </div>
                     <div class="total-breakdown-item">
-                        <span><strong>{{totalGainsAndLosses | currency}}</strong></span>
+                        <span>{{totalGainsAndLosses | currency}}</span>
+                    </div>
+                    <div class="total-breakdown-item">
+                        <span><strong>{{totalCashout | currency}}</strong></span>
                     </div>
                 </div>
             </div>
@@ -295,6 +304,11 @@ export default {
                 t += this.totalPurchaseCost(this.allTransactions[i])
             }   
             return parseFloat(t)
+        },
+        totalCashout() {
+            var ti = this.totalInvestment
+            var tp = this.totalGainsAndLosses;
+            return parseFloat(ti + tp)
         },
         allTransactions() {
             var tx = []
