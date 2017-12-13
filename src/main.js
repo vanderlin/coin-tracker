@@ -37,6 +37,7 @@ Vue.prototype.$db = db
 Vue.prototype.$http = axios
 Vue.prototype.$moment = moment
 
+var intervalCheckTime = 2000
 var isLoadingCoinData = false;
 var coinURLs = {
 	BTC: 'https://api.coinbase.com/v2/prices/BTC-USD/buy',
@@ -80,5 +81,5 @@ loadCoinPriceData().then(() => {
 		}).$mount('#app')
 	})
 
-	setInterval(loadCoinPriceData, 5000);
+	setInterval(loadCoinPriceData, intervalCheckTime);
 })
