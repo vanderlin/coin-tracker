@@ -56,20 +56,49 @@
                 </footer>
             </div>
         </div>
-    
-        <table class="table is-striped">
+        <div class="panel is-hidden-tablet mobile-table">
+            <!-- <div class="panel-block is-active">
+                <span class="panel-icon">
+                    <i class="fa fa-book"></i>
+                </span>
+                bulma
+            </div> -->
+            <div class="panel-block market-price">
+                <div class="coin-price" v-for="coin in coins">
+                    <span class="name">{{coin}}</span><span class="price">{{getCurrentMarketPrice(coin) | currency}}</span>
+                </div>
+            </div>
+
+            <div class="panel-block transactions" v-if="transactions && allTransactions.length" v-for="transaction in allTransactions">
+                <div class="panel-item">
+                    <span class="has-text-weight-bold">{{transaction.coin}}</span><br>
+                    <span>{{transaction.purchase_amount}} @ {{transaction.cost_basis | currency}}</span>
+                </div>
+                <div class="panel-item">
+                    {{totalPurchaseCost(transaction) | currency}}
+                </div>
+                <!-- <div><b>{{getCurrentMarketPrice(transaction) | currency}} <small class="is-size-7 has-text-grey-light">{{transaction.coin}}</small></b></div> -->
+                <div class="panel-item has-text-right">
+                    <div :class="{'is-gain': isMarketUp(transaction), 'is-loss': !isMarketUp(transaction)}">{{getPercentChange(transaction)}}%</div>
+                    <div :class="{'is-gain': isGain(transaction), 'is-loss': !isGain(transaction)}">{{getProfits(transaction) | currency}}</div>
+                </div>
+            </div>
+        </div>
+        <table class="table is-striped is-hidden-mobile">
             <thead>
                 <tr>
                     <!-- <th v-for="(item, key) in transactions.header">{{item}}</th> -->
-                    <th>Coin</th>
-                    <th>Date</th>
-                    <th>Investment (USD)</th>
-                    <th>Total Investment (USD)</th>
-                    <th>Market Price (USD)</th>
-                    <th>+/- %</th>
-                    <th>Profits</th>
                     <th>
-                        <a class="button is-small" @click.prevent="addTransation">
+                        <span class="th-title">Coin</span>
+                    </th>
+                    <th><span class="th-title">Date</span></th>
+                    <th><span class="th-title">Investment</span></th>
+                    <th><span class="th-title">Total Investment</span> <small class="is-size-7 has-text-grey-light">(USD)</small></th>
+                    <th><span class="th-title">Market Price</span> <small class="is-size-7 has-text-grey-light">(USD)</small></th>
+                    <th><span class="th-title">+/- %</span></th>
+                    <th><span class="th-title">Profits</span></th>
+                    <th>
+                        <a class="button is-small is-success" @click.prevent="addTransation">
                             <span class="icon is-small">
                                 <i class="fa fa-plus"></i>
                             </span>
@@ -83,7 +112,7 @@
                     <td>{{transaction.date | dateFormat('ll')}}</td>
                     <td>{{transaction.purchase_amount}} @ {{transaction.cost_basis | currency}}</td>
                     <td>{{totalPurchaseCost(transaction) | currency}}</td>
-                    <td><b>{{getCurrentMarketPrice(transaction) | currency}} <small class="is-size-7 has-text-grey-light">{{transaction.coin}}</small></b></td>
+                    <td><b>{{getCurrentMarketPrice(transaction.coin) | currency}} <small class="is-size-7 has-text-grey-light">{{transaction.coin}}</small></b></td>
                     <td :class="{'is-gain': isMarketUp(transaction), 'is-loss': !isMarketUp(transaction)}">{{getPercentChange(transaction)}}%</td>
                     <td :class="{'is-gain': isGain(transaction), 'is-loss': !isGain(transaction)}">{{getProfits(transaction) | currency}}</td>
                     <td class="edit-item is-aligned-middle">
@@ -94,26 +123,25 @@
                         </a>
                     </td>
                 </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                        <span class="has-text-right">                
-                            Total
-                        </span>
-                        <b class="has-text-left">
-                            {{totalGainsAndLosses | currency}}
-                        </b>
-                    </td>
-                </tr>
-
             </tbody>
         </table>
-
+        <div class="total-breakdown">
+            <div class="total-breakdown-columns">
+                <div class="total-breakdown-col breakdown-title">
+                    <div class="total-breakdown-item">
+                        Gains &amp; Losses
+                    </div>
+                </div>
+                <div class="total-breakdown-col breakdown-cost">
+                    <div class="total-breakdown-item">
+                        <span>{{totalInvestment | currency}}</span>
+                    </div>
+                    <div class="total-breakdown-item">
+                        <span><strong>{{totalGainsAndLosses | currency}}</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>   
 </div>   
 </template>
@@ -150,12 +178,16 @@ export default {
             return pct > 0.0
         },
         isMarketUp(transaction) {
-            var cp = parseFloat(this.getCurrentMarketPrice(transaction))
+            var cp = parseFloat(this.getCurrentMarketPrice(transaction.coin))
             var pp = parseFloat(transaction.cost_basis)
             return pp < cp
         },
-        getCurrentMarketPrice(transaction) {
-            return parseFloat(this.prices[transaction.coin].amount)
+        isProfitGain() {
+            var tgl = this.totalGainsAndLosses
+            return tgl > 0
+        },
+        getCurrentMarketPrice(coin) {
+            return parseFloat(this.prices[coin].amount)
         },
         totalPurchaseCost(transaction) {
             var total = parseFloat(transaction.purchase_amount * transaction.cost_basis);
@@ -163,7 +195,7 @@ export default {
         },
         getPercentChange(transaction) {
             var costBasis = transaction.cost_basis
-            var marketPrice = this.getCurrentMarketPrice(transaction)
+            var marketPrice = this.getCurrentMarketPrice(transaction.coin)
             if (costBasis == 0) {
                 return 0
             }
@@ -171,7 +203,7 @@ export default {
             return diff.toFixed(2)
         },
         getProfits(transaction) {
-            var marketPrice = this.getCurrentMarketPrice(transaction)
+            var marketPrice = this.getCurrentMarketPrice(transaction.coin)
             var totalCoins = transaction.purchase_amount;
             if (totalCoins == 0) {
                 return 0
@@ -244,7 +276,14 @@ export default {
             for (var i = 0; i < this.allTransactions.length; i++) {
                 t += this.getProfits(this.allTransactions[i])
             }   
-            return t
+            return parseFloat(t)
+        },
+        totalInvestment() {
+            var t = 0
+            for (var i = 0; i < this.allTransactions.length; i++) {
+                t += this.totalPurchaseCost(this.allTransactions[i])
+            }   
+            return parseFloat(t)
         },
         allTransactions() {
             var tx = []
@@ -276,6 +315,7 @@ export default {
 
 <style lang="scss">
 @import '../styles/variables';
+@import '~bulma/sass/utilities/mixins';
 .table {
     .button {
         border-radius: 50%;
@@ -294,6 +334,9 @@ export default {
 }
 .main-page {
     margin-top: 50px;
+    @include mobile {
+        margin-top: 0px;
+    }
 }
 .is-warning-pulse {
     background-color: $red-color;
@@ -308,6 +351,70 @@ export default {
 .is-aligned-middle {
     vertical-align: middle !important;
 }
+
+.total-breakdown {
+
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 10px; 
+    .total-breakdown-columns {
+        display: flex;
+    }
+    .total-breakdown-col {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+        padding-right: 10px;
+        &:last-child {
+            padding-right: 0px;
+        }
+        .breakdown-cost {
+            text-align: right;
+        }
+        .total-breakdown-item {
+            display: flex;
+            flex: 1;
+            justify-content: flex-end;
+        }
+    }
+}
+
+th .th-title {
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+
+.mobile-table {
+    .panel-item {
+        flex: 1;
+        font-size: 13px;
+    }
+    .transactions {
+        display: flex;
+    }
+    .market-price {
+        background-color: #eee;
+        display: flex;
+        justify-content: center;
+        .coin-price {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            font-size: 11px;
+            .name {
+                margin-right: 5px; 
+            }
+            .price {
+                font-weight: bold;
+            }
+        }
+    }
+}
+
+
 
 @keyframes warningPulse {
   0% {
