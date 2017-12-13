@@ -56,6 +56,7 @@
                 </footer>
             </div>
         </div>
+        
         <div class="panel is-hidden-tablet mobile-table">
             <!-- <div class="panel-block is-active">
                 <span class="panel-icon">
@@ -64,7 +65,7 @@
                 bulma
             </div> -->
             <div class="panel-block market-price">
-                <div class="coin-price" v-for="coin in coins">
+                <div class="coin-price" v-for="coin in getInvestedCoins">
                     <span class="name">{{coin}}</span><span class="price">{{getCurrentMarketPrice(coin) | currency}}</span>
                 </div>
             </div>
@@ -84,7 +85,8 @@
                 </div>
             </div>
         </div>
-        <table class="table is-striped is-hidden-mobile">
+        
+        <table class="table is-fullwidth is-striped is-hidden-mobile">
             <thead>
                 <tr>
                     <!-- <th v-for="(item, key) in transactions.header">{{item}}</th> -->
@@ -95,8 +97,8 @@
                     <th><span class="th-title">Investment</span></th>
                     <th><span class="th-title">Total Investment</span> <small class="is-size-7 has-text-grey-light">(USD)</small></th>
                     <th><span class="th-title">Market Price</span> <small class="is-size-7 has-text-grey-light">(USD)</small></th>
-                    <th><span class="th-title">+/- %</span></th>
                     <th><span class="th-title">Profits</span></th>
+                    <th><span class="th-title">+/- %</span></th>
                     <th>
                         <a class="button is-small is-success" @click.prevent="addTransation">
                             <span class="icon is-small">
@@ -110,11 +112,11 @@
                 <tr v-if="transactions && allTransactions.length" v-for="transaction in allTransactions">
                     <td>{{transaction.coin}}</td>
                     <td>{{transaction.date | dateFormat('ll')}}</td>
-                    <td>{{transaction.purchase_amount}} @ {{transaction.cost_basis | currency}}</td>
+                    <td>{{transaction.purchase_amount}} <span class="is-size-7">@</span> {{transaction.cost_basis | currency}}</td>
                     <td>{{totalPurchaseCost(transaction) | currency}}</td>
                     <td><b>{{getCurrentMarketPrice(transaction.coin) | currency}} <small class="is-size-7 has-text-grey-light">{{transaction.coin}}</small></b></td>
-                    <td :class="{'is-gain': isMarketUp(transaction), 'is-loss': !isMarketUp(transaction)}">{{getPercentChange(transaction)}}%</td>
                     <td :class="{'is-gain': isGain(transaction), 'is-loss': !isGain(transaction)}">{{getProfits(transaction) | currency}}</td>
+                    <td :class="{'is-gain': isMarketUp(transaction), 'is-loss': !isMarketUp(transaction)}">{{getPercentChange(transaction)}}%</td>
                     <td class="edit-item is-aligned-middle">
                         <a class="button is-small" @click.prevent="editTransaction(transaction)">
                             <span class="icon is-small">
@@ -125,6 +127,7 @@
                 </tr>
             </tbody>
         </table>
+
         <div class="total-breakdown">
             <div class="total-breakdown-columns">
                 <div class="total-breakdown-col breakdown-title">
@@ -199,8 +202,9 @@ export default {
             if (costBasis == 0) {
                 return 0
             }
-            var diff = ((marketPrice - costBasis) / costBasis) * 100
-            return diff.toFixed(2)
+            
+            var pct = ((marketPrice - costBasis) / costBasis) * 100
+            return pct.toFixed(2)
         },
         getProfits(transaction) {
             var marketPrice = this.getCurrentMarketPrice(transaction.coin)
@@ -271,6 +275,13 @@ export default {
 
     },
     computed: {
+        getInvestedCoins() {
+            var coins = {}
+            for (var i = 0; i < this.allTransactions.length; i++) {
+                coins[this.allTransactions[i].coin] = true;
+            }   
+            return Object.keys(coins);
+        },
         totalGainsAndLosses() {
             var t = 0
             for (var i = 0; i < this.allTransactions.length; i++) {

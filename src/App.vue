@@ -32,7 +32,6 @@ export default {
 <style lang="scss">
 @import './styles/main.scss';
 .user-photo {
-	background-color: red;
 	width: 32px;
 	height: 32px;
 	img {
