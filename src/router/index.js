@@ -4,6 +4,7 @@ import auth from '../auth'
 import guards from '../guards'
 import Router from 'vue-router'
 import IndexPage from '@/pages/IndexPage'
+import LoginPage from '@/pages/LoginPage'
 
 Vue.use(Router)
 
@@ -30,7 +31,18 @@ export default new Router({
     	{
 			path: '/login',
 			name: 'login',
-			component: IndexPage,
+			component: LoginPage,
+			beforeEnter: (to, from, next)=> {
+				if (auth.isLoggedIn()) {
+					return next('/')
+				} 
+				return next();
+			}
+		},
+		{
+			path: '/auth/google',
+			name: 'auth-google',
+			component: LoginPage,
 			beforeEnter: (to, from, next)=> {
 				if (!auth.isLoggedIn()) {
 					return loginWithGoogle()
