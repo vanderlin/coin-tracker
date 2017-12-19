@@ -3,15 +3,18 @@
 			<div class="navbar-menu">
 				
 				<div class="navbar-start">
-					<a class="navbar-item">
+					<a class="navbar-item" v-if="authenticated">
 						<figure class="user-photo">
 							<img :src="authProfile.photoURL">
 						</figure>
 					</a>			
+					<router-link :to="{path: '/login'}"class="navbar-item" v-if="!authenticated">
+						Login
+					</router-link>			
 				</div>
 
 				<div class="navbar-end">
-					<router-link :to="{path: '/logout'}"class="navbar-item">
+					<router-link :to="{path: '/logout'}"class="navbar-item" v-if="authenticated">
 						<span>Sign out</span>
 						<span class="icon">
 							<i class="fa fa-sign-out"></i>

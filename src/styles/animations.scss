@@ -1,0 +1,13 @@
+@import './styles/variables';
+@import '~bulma/sass/utilities/mixins';
+@keyframes warningPulse {
+	0% {
+		background-color: $red-color;
+	}
+	50% {
+		background-color: $red-dark-color;
+	}
+	100 {
+		background-color: $red-color;
+	}
+}

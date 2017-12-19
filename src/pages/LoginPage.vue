@@ -14,6 +14,8 @@
 				Track your coins — and that is it.
 			</h2>
 			<div>
+                <router-link class="button" :to="{path: '/demo'}">Demo</router-link><br>
+                <div class="line-break"></div>
 				<router-link :to="{path: '/auth/google'}">
 					<img src="../assets/img/btn_google_signin_light_normal_web@2x.png" alt="">
 				</router-link>
@@ -52,5 +54,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
+.title {
+    text-transform: uppercase;
+}
 </style>

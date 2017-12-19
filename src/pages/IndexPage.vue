@@ -1,11 +1,14 @@
 <template>
 <div>
+
     <main-nav></main-nav>
+
     <div class="main-page container">
 
         <div class="columns" v-if="prices">
             <div class="column is-10 is-offset-1">
-
+                
+                <!-- add/edit transactions -->
                 <div v-if="selectedTransaction" class="modal" :class="{'is-active': showModal}">
                     <div class="modal-background transaction-modal" @click.prevent="closeModal"></div>
                         <div class="modal-card">
@@ -62,15 +65,10 @@
                     </div>
                 </div>
                 
+                <!-- transactions table - mobile -->
                 <div class="panel is-hidden-tablet mobile-table">
-                    <!-- <div class="panel-block is-active">
-                        <span class="panel-icon">
-                            <i class="fa fa-book"></i>
-                        </span>
-                        bulma
-                    </div> -->
                     <div class="panel-block market-price">
-                        <div class="coin-price" v-for="coin in getInvestedCoins">
+                        <div class="coin-price" v-for="coin in investedCoins">
                             <span class="name">{{coin}}</span><span class="price">{{getCurrentMarketPrice(coin) | currency}}</span>
                         </div>
                     </div>
@@ -91,13 +89,11 @@
                     </div>
                 </div>
                 
+                <!-- transactions table -->
                 <table class="table is-fullwidth is-striped is-hidden-mobile">
                     <thead>
                         <tr>
-                            <!-- <th v-for="(item, key) in transactions.header">{{item}}</th> -->
-                            <th>
-                                <span class="th-title">Coin</span>
-                            </th>
+                            <th><span class="th-title">Coin</span></th>
                             <th><span class="th-title">Date</span></th>
                             <th><span class="th-title">Investment</span></th>
                             <th><span class="th-title">Total Investment</span> <small class="is-size-7 has-text-grey-light">(USD)</small></th>
@@ -113,26 +109,27 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr v-if="transactions && allTransactions.length" v-for="transaction in allTransactions">
-                            <td>{{transaction.coin}}</td>
-                            <td>{{transaction.date | dateFormat('ll')}}</td>
-                            <td>{{transaction.purchase_amount}} <span class="is-size-7">@</span> {{transaction.cost_basis | currency}}</td>
-                            <td>{{totalPurchaseCost(transaction) | currency}}</td>
-                            <td><b>{{getCurrentMarketPrice(transaction.coin) | currency}} <small class="is-size-7 has-text-grey-light">{{transaction.coin}}</small></b></td>
-                            <td :class="{'is-gain': isGain(transaction), 'is-loss': !isGain(transaction)}">{{getProfits(transaction) | currency}}</td>
-                            <td :class="{'is-gain': isMarketUp(transaction), 'is-loss': !isMarketUp(transaction)}">{{getPercentChange(transaction)}}%</td>
-                            <td class="edit-item is-aligned-middle">
-                                <a class="button is-small" @click.prevent="editTransaction(transaction)">
-                                    <span class="icon is-small">
-                                        <i class="fa fa-pencil"></i>
-                                    </span>
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
+                        <draggable v-model="allTransactions" :element="'tbody'" :options="{draggable:'.transaction-row'}">
+                            <tr class="transaction-row" :key="transactions['.key']" v-if="transactions && allTransactions.length" v-for="transaction in allTransactions">
+                                <td>{{transaction.coin}}</td>
+                                <td>{{transaction.date | dateFormat('ll')}}</td>
+                                <td>{{transaction.purchase_amount}} <span class="is-size-7">@</span> {{transaction.cost_basis | currency}}</td>
+                                <td>{{totalPurchaseCost(transaction) | currency}}</td>
+                                <td><b>{{getCurrentMarketPrice(transaction.coin) | currency}} <small class="is-size-7 has-text-grey-light">{{transaction.coin}}</small></b></td>
+                                <td :class="{'is-gain': isGain(transaction), 'is-loss': !isGain(transaction)}">{{getProfits(transaction) | currency}}</td>
+                                <td :class="{'is-gain': isMarketUp(transaction), 'is-loss': !isMarketUp(transaction)}">{{getPercentChange(transaction)}}%</td>
+                                <td class="edit-item is-aligned-middle">
+                                    <a class="button is-small" @click.prevent="editTransaction(transaction)">
+                                        <span class="icon is-small">
+                                            <i class="fa fa-pencil"></i>
+                                        </span>
+                                    </a>
+                                </td>
+                            </tr>
+                        </draggable>
                 </table>
-
+                
+                <!-- total investment breakdown -->
                 <div class="total-breakdown">
                     <div class="total-breakdown-columns">
                         <div class="total-breakdown-col breakdown-title">
@@ -154,12 +151,13 @@
                                 <span>{{totalGainsAndLosses | currency}}</span>
                             </div>
                             <div class="total-breakdown-item">
-                                <span><strong>{{totalCashout | currency}}</strong></span>
+                                <span><strong>{{totalCashOut | currency}}</strong></span>
                             </div>
                         </div>
                     </div>
                 </div>
-
+                
+                <!-- add transaction button -->
                 <div class="add-button-container is-hidden-tablet">
                     <button class="button is-success add-button" @click.prevent="addTransation">
                         <span class="icon">
@@ -167,6 +165,7 @@
                         </span>
                     </button>
                 </div>
+
             </div>   
         </div>   
 
@@ -175,6 +174,7 @@
 </template>
 
 <script>
+import _ from 'lodash'
 export default {
     name: 'App',
     props: {
@@ -259,14 +259,13 @@ export default {
                 cost_basis: transaction.cost_basis,
                 purchase_amount: transaction.purchase_amount,
             }
-
             if (!transaction['.key']) {
                 console.log('this is a new transaction');
-                this.$db.ref(`transactions/${this.authID}`).push(payload)
+                this.$db.ref(`transactions/${this.uid}`).push(payload)
             } 
             else {
                 
-                this.$db.ref(`transactions/${this.authID}/${transaction['.key']}`).update(payload)
+                this.$db.ref(`transactions/${this.uid}/${transaction['.key']}`).update(payload)
             }
             this.showModal = false
             this.selectedTransaction = null
@@ -276,32 +275,31 @@ export default {
             this.selectedTransaction = null
             this.confirmDeleteTransaction = false;
         },
-        addTransation() {
-            this.showModal = true
-
-            var transaction = {
+        createTransaction() {
+            return {
                 coin: 'BTC',
                 date: (new Date()).getTime(),
                 cost_basis: 0,
                 purchase_amount: 0,
             }
-
-            this.selectedTransaction = transaction
+        },
+        addTransation() {
+            this.showModal = true
+            this.selectedTransaction = this.createTransaction()
         },
         removeTransaction(transaction) {
             if(!this.confirmDeleteTransaction) {
                 this.confirmDeleteTransaction = true;
             }
             else if(this.confirmDeleteTransaction) {
-                this.$db.ref(`transactions/${this.authID}/${transaction['.key']}`).remove()
+                this.$db.ref(`transactions/${this.uid}/${transaction['.key']}`).remove()
                 console.log('remove transaction', transaction['.key']);
                 this.closeModal();
             }
         }
-
     },
     computed: {
-        getInvestedCoins() {
+        investedCoins() {
             var coins = {}
             for (var i = 0; i < this.allTransactions.length; i++) {
                 coins[this.allTransactions[i].coin] = true;
@@ -322,22 +320,42 @@ export default {
             }   
             return parseFloat(t)
         },
-        totalCashout() {
+        totalCashOut() {
             var ti = this.totalInvestment
             var tp = this.totalGainsAndLosses;
             return parseFloat(ti + tp)
         },
-        allTransactions() {
-            var tx = []
-            if(this.transactions) {
-                for(var t in this.transactions) {
-                    if(t != '.key') {
-                        this.transactions[t]['.key'] = t
-                        tx.push(this.transactions[t])
+        allTransactions: {
+            get() {
+                var tx = []
+                if(this.transactions) {
+                    for(var t in this.transactions) {
+                        if(t != '.key') {
+                            this.transactions[t]['.key'] = t
+                            tx.push(this.transactions[t])
+                        }
                     }
                 }
+                return _.sortBy(tx, function(item) {
+                    var c = (item.order === undefined) ? item['.key'] : item.order
+                    console.log('order', c);
+                    return c;
+                }) 
+            },
+            set(items) {
+                var payload = {}
+                for (var i = 0; i < items.length; i++) {
+                    var item = items[i]
+                    var key = item['.key'];
+                    this.$db.ref(`transactions/${this.uid}/${key}`).update({order: i})
+                }
             }
-            return tx
+        },
+        uid() {
+            if (this.$route.name == 'demo') {
+                return 'demo'
+            }
+            return this.authID;
         }
     },
     watch: {
@@ -350,7 +368,20 @@ export default {
     created() {
     },
     mounted() {
-        this.$bindAsObject('transactions', this.$db.ref(`transactions/${this.authID}`))
+        console.log('uid', this.uid);
+        if(this.uid == 'demo') {
+            var payload = {}
+            for (var i = 0; i < 4; i++) {
+                var tx = this.createTransaction()
+                tx.coin = _.sample(this.coins);
+                var mp = this.getCurrentMarketPrice(tx.coin)
+                tx.cost_basis = Math.abs(mp + _.random(-100, 100));
+                tx.purchase_amount = _.random(0.2, 3);
+                payload['key_'+i] = tx;
+            }
+            this.$db.ref(`transactions/${this.uid}`).set(payload)
+        }
+        this.$bindAsObject('transactions', this.$db.ref(`transactions/${this.uid}`))
     }
 }
 </script>
@@ -358,11 +389,27 @@ export default {
 <style lang="scss">
 @import '../styles/variables';
 @import '~bulma/sass/utilities/mixins';
+.main-page {
+    margin-top: 50px;
+    @include mobile {
+        margin-top: 0px;
+    }
+}
+
+// Table
+// -------------------------------------
 .table {
     .button {
         border-radius: 50%;
     }
 }
+th .th-title {
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+// font colors for prices
+// -------------------------------------
 .is-gain {
     color: green;
     font-weight: bold;
@@ -370,16 +417,12 @@ export default {
 .is-loss {
     color: red;
 }
+
 .modal-card {
     max-height: calc(100vh - 100px);
     height: calc(100vh - 100px);
 }
-.main-page {
-    margin-top: 50px;
-    @include mobile {
-        margin-top: 0px;
-    }
-}
+
 .is-warning-pulse {
     background-color: $red-color;
     animation: warningPulse 1.5s
@@ -426,12 +469,9 @@ export default {
     }
 }
 
-th .th-title {
-    font-size: 13px;
-    text-transform: uppercase;
-}
 
-
+// mobile table
+// -------------------------------------
 .mobile-table {
     .panel-item {
         flex: 1;
@@ -459,6 +499,7 @@ th .th-title {
     }
 }
 
+
 .field.is-grouped {
     @include mobile {
         flex-direction: column;
@@ -469,6 +510,8 @@ th .th-title {
     }
 }
 
+// add a transactions
+// -------------------------------------
 .add-button-container {
     width: 100%;
     padding: 100px;
@@ -486,15 +529,9 @@ th .th-title {
     }
 }
 
-@keyframes warningPulse {
-  0% {
-    background-color: $red-color;
-  }
-  50% {
-    background-color: $red-dark-color;
-  }
-  100 {
-    background-color: $red-color;
-  }
+// draggable item
+// -------------------------------------
+.sortable-ghost {
+    background-color: $blue-color !important;
 }
 </style>

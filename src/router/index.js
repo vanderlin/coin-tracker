@@ -27,6 +27,12 @@ export default new Router({
 			component: IndexPage,
 			beforeEnter: guards.requireAuth
     	},
+
+    	{
+			path: '/demo',
+			name: 'demo',
+			component: IndexPage
+    	},
     	
     	{
 			path: '/login',

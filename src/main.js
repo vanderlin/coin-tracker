@@ -48,7 +48,7 @@ var coinURLs = {
 function loadCoinPriceData() {
 	return new Promise((resolve, reject) => {
 		if(!isLoadingCoinData) {
-			console.log('laoding latest data');
+			// console.log('laoding latest data');
 			const reqs = ['BTC', 'LTC', 'ETH'].map(key => {
 	            return axios.get(coinURLs[key])
 	        })
@@ -61,18 +61,22 @@ function loadCoinPriceData() {
 	            		ETH: ethRes.data.data,
 	            	}
 					store.commit('prices', prices)
-	            	console.log(prices);
+					if(window.LOG_PRICES) {
+						console.log(prices);
+					}
 	            	isLoadingCoinData = false;
+
+					resolve(prices)
+
 	            })
 	        )
 			isLoadingCoinData = true;
-			resolve(true)
 		}
 	})
 }
 
-loadCoinPriceData().then(() => {
-
+loadCoinPriceData().then((prices) => {
+	console.log('loading market prices', prices);
 	auth.init().then(() => {
 		new Vue({
 			store,

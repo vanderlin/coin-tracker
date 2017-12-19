@@ -2,6 +2,7 @@ $fa-font-path: "../node_modules/font-awesome/fonts";
 @import '~font-awesome/scss/font-awesome.scss';    
 @import "./fonts";
 @import "./variables";
+@import "./animations";
 @import "~bulma";
 
 html, body {
@@ -12,4 +13,12 @@ html, body {
 
 .table {
 	// background-color: darken($blue-color, 10);
+}
+
+.line-break {
+	background-color: #cacaca;
+	height: 2px;
+	width: 70px;
+	margin: 2.75em auto 2.25em;
+	border: 0px none;
 }
