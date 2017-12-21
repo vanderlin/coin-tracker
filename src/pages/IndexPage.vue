@@ -145,7 +145,7 @@
                 </div>
                 
                 <!-- transactions table -->
-                <table class="table is-fullwidth is-striped is-hidden-mobile">
+                <table class="table is-fullwidth is-bordered is-striped is-hidden-mobile">
                     <thead>
                         <tr>
                             <th><span class="th-title">Coin</span></th>
@@ -167,8 +167,13 @@
                         <draggable v-model="allTransactions" :element="'tbody'" :options="{draggable:'.transaction-row'}">
                             <tr class="transaction-row" :key="transactions['.key']" v-if="transactions && allTransactions.length" v-for="transaction in allTransactions">
                                 <td>{{transaction.coin}}</td>
-                                <td>{{transaction.date | dateFormat('ll')}}</td>
-                                <td>{{transaction.purchase_amount}} <span class="is-size-7">@</span> {{transaction.cost_basis | currency}}</td>
+                                <td>{{transaction.date | dateFormat(dateFormatString)}}</td>
+                                <td>
+                                    <span class="">
+                                        {{transaction.purchase_amount}} <span class="is-size-7">@</span>
+                                        {{transaction.cost_basis | currency}}
+                                    </span>
+                                </td>
                                 <td>{{totalPurchaseCost(transaction) | currency}}</td>
                                 <td><b>{{getCurrentMarketPrice(transaction.coin) | currency}} <small class="is-size-7 has-text-grey-light">{{transaction.coin}}</small></b></td>
                                 <td :class="{'is-gain': isGain(transaction), 'is-loss': !isGain(transaction)}">{{getProfits(transaction) | currency}}</td>
@@ -246,7 +251,8 @@ export default {
             showModal: false,
             transactions: null,
             coins: ['BTC', 'LTC', 'ETH'],
-            selectedTransaction: null
+            selectedTransaction: null,
+            dateFormatString: 'MMM D, YY'
             /*transactions: {
                 data: [
                     {
@@ -392,8 +398,9 @@ export default {
             var t = 0
             for (var i = 0; i < this.allTransactions.length; i++) {
                 var fee = this.allTransactions[i].fee;
-                if(fee!=undefined || fee != null) {
-                    t += fee
+                if(fee!=undefined && fee != null) {
+                    console.log(fee);
+                    t += parseFloat(fee)
                 }
             }   
             return parseFloat(t)
