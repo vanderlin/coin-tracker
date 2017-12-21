@@ -462,10 +462,6 @@ export default {
             this.$db.ref(`transactions/${this.uid}`).set(payload)
         }
         this.$bindAsObject('transactions', this.$db.ref(`transactions/${this.uid}`))
-
-        setTimeout(() => {
-            this.editTransaction(this.allTransactions[0])
-        }, 1000)
     }
 }
 </script>
