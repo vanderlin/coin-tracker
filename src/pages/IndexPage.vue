@@ -17,36 +17,91 @@
                             <button class="delete" aria-label="close" @click.prevent="closeModal"></button>
                         </header>
                         <section class="modal-card-body">
-                                <div class="field is-grouped">
-                                    <div class="control">
-                                        <label class="label">Coin</label>
-                                        <div class="select">
-                                            <select v-model="selectedTransaction.coin">
-                                                <option :value="coin" v-for="coin in coins">{{coin}}</option>
-                                            </select>
+                                
+                            <div class="field is-horizontal">                            
+                                <div class="field-label is-normal">
+                                    <label class="label">Coin</label>                                                
+                                </div>
+                                <div class="field-body">
+                                    <div class="field is-grouped">
+                                        <div class="control">
+                                            <div class="select">
+                                                <select v-model="selectedTransaction.coin">
+                                                    <option :value="coin" v-for="coin in coins">{{coin}}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="control">
+                                            <datepicker class="input" placeholder="Transaction date" v-model="selectedTransaction.date" :config="{ dateFormat: 'M j Y' }"></datepicker>
+                                            <!-- <input class="input" type="date" v-model="selectedTransaction.date"> -->
                                         </div>
                                     </div>
-                                    <div class="control">
-                                        <label class="label">Transaction Date</label>
-                                        <datepicker class="input" placeholder="Transaction date" v-model="selectedTransaction.date" :config="{ dateFormat: 'M j Y' }"></datepicker>
-                                        <!-- <input class="input" type="date" v-model="selectedTransaction.date"> -->
+                                </div>
+                            </div>
+
+                            <div class="field is-horizontal">
+                                <div class="field-label is-normal">
+                                    <label class="label">Total Coins</label>                                                
+                                </div>
+                                <div class="field-body">
+                                    <div class="field is-narrow">
+                                        <div class="control">
+                                            <input class="input" type="text" v-model="selectedTransaction.purchase_amount">
+                                            <p class="help">Number of coins purchased.</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="field is-grouped">
-                                    <div class="control">
-                                        <label class="label">Total Coins</label>
-                                        <input class="input" type="text" v-model="selectedTransaction.purchase_amount">
-                                    </div>
-                                    <div class="control">
-                                        <label class="label">Cost Basis</label>
-                                        <input class="input" type="text" v-model="selectedTransaction.cost_basis">
-                                    </div>
-                                    <div class="control">
-                                        <label class="label">Total</label>
-                                        <span class="add-transaction-total">{{totalPurchaseCost(selectedTransaction) | currency}}</span>
-                                        <!-- <input class="input" type="text" disabled="disabled" name="" :value=""> -->
+                            </div>
+                            
+                             <div class="field is-horizontal">
+                                <div class="field-label is-normal">
+                                    <label class="label">Cost Basis</label>
+                                </div>
+                                <div class="field-body">
+                                    <div class="field is-narrow">
+                                        <div class="control">
+                                            <input class="input" type="text" v-model="selectedTransaction.cost_basis">
+                                            <p class="help">Price of coing at purchase.</p>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="field is-horizontal">
+                                <div class="field-label is-normal">
+                                    <label class="label">Fee</label>
+                                </div>
+                                <div class="field-body">
+                                    <div class="field is-narrow">
+                                        <div class="control">
+                                            <input class="input" type="text" v-model="selectedTransaction.fee">
+                                            <p class="help">Fee for transaction.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="field is-horizontal form-breakdown-field">
+                                <div class="field-label is-normal">
+                                    <label class="label has-text-weight-normal">Investment</label>
+                                    <label class="label has-text-weight-normal">Fee</label>
+                                    <label class="label">Total</label>
+                                </div>
+                                <div class="field-body">
+                                    <div class="field is-narrow">
+                                        <div class="control">
+                                            <span class="add-transaction-total">{{totalPurchaseCost(selectedTransaction) | currency}}</span>
+                                        </div>
+                                        <div class="control">
+                                            <span class="add-transaction-total">{{selectedTransaction.fee | currency}}</span>
+                                        </div>
+                                        <div class="control">
+                                            <span class="add-transaction-total">{{totalPurchaseCostWithFee(selectedTransaction) | currency}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                     
                         </section>
                         <footer class="modal-card-foot">
                             <button class="button is-success" @click.prevent="updateTransaction(selectedTransaction)">Save</button>
@@ -137,6 +192,9 @@
                                 Total Investment
                             </div>
                             <div class="total-breakdown-item">
+                                Total Fees
+                            </div>
+                            <div class="total-breakdown-item">
                                 Gains &amp; Losses
                             </div>
                             <div class="total-breakdown-item">
@@ -146,6 +204,9 @@
                         <div class="total-breakdown-col breakdown-cost">
                             <div class="total-breakdown-item">
                                 <span>{{totalInvestment | currency}}</span>
+                            </div>
+                            <div class="total-breakdown-item">
+                                <span>{{totalFees | currency}}</span>
                             </div>
                             <div class="total-breakdown-item">
                                 <span>{{totalGainsAndLosses | currency}}</span>
@@ -222,6 +283,11 @@ export default {
             var total = parseFloat(transaction.purchase_amount * transaction.cost_basis);
             return total;
         },
+        totalPurchaseCostWithFee(transaction) {
+            var total = parseFloat(transaction.purchase_amount * transaction.cost_basis);
+            total += parseFloat(transaction.fee)
+            return total;
+        },
         getPercentChange(transaction) {
             var costBasis = transaction.cost_basis
             var marketPrice = this.getCurrentMarketPrice(transaction.coin)
@@ -257,6 +323,7 @@ export default {
                 coin: transaction.coin,
                 date: this.$moment(transaction.date).toDate().getTime(),
                 cost_basis: transaction.cost_basis,
+                fee: transaction.fee,
                 purchase_amount: transaction.purchase_amount,
             }
             if (!transaction['.key']) {
@@ -280,6 +347,7 @@ export default {
                 coin: 'BTC',
                 date: (new Date()).getTime(),
                 cost_basis: 0,
+                fee: 0,
                 purchase_amount: 0,
             }
         },
@@ -319,11 +387,22 @@ export default {
                 t += this.totalPurchaseCost(this.allTransactions[i])
             }   
             return parseFloat(t)
+        }, 
+        totalFees() {
+            var t = 0
+            for (var i = 0; i < this.allTransactions.length; i++) {
+                var fee = this.allTransactions[i].fee;
+                if(fee!=undefined || fee != null) {
+                    t += fee
+                }
+            }   
+            return parseFloat(t)
         },
         totalCashOut() {
             var ti = this.totalInvestment
             var tp = this.totalGainsAndLosses;
-            return parseFloat(ti + tp)
+            var tf = this.totalFees;
+            return parseFloat(ti + tp) - parseFloat(tf)
         },
         allTransactions: {
             get() {
@@ -377,11 +456,16 @@ export default {
                 var mp = this.getCurrentMarketPrice(tx.coin)
                 tx.cost_basis = Math.abs(mp + _.random(-100, 100));
                 tx.purchase_amount = _.random(0.2, 3);
+                tx.fee = _.random(1.2, 3.0);
                 payload['key_'+i] = tx;
             }
             this.$db.ref(`transactions/${this.uid}`).set(payload)
         }
         this.$bindAsObject('transactions', this.$db.ref(`transactions/${this.uid}`))
+
+        setTimeout(() => {
+            this.editTransaction(this.allTransactions[0])
+        }, 1000)
     }
 }
 </script>
@@ -525,10 +609,17 @@ th .th-title {
         height: 40px;
         border-radius: 50%;
         border: none;
-        background-color: red;
     }
 }
-
+.form-breakdown-field {
+    @include mobile {
+        display: flex;
+        .field-label {
+                margin-right: 1.5rem;
+            padding-top: 0.375em;
+        }
+    }
+}
 // draggable item
 // -------------------------------------
 .sortable-ghost {
